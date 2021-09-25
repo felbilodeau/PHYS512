@@ -18,6 +18,8 @@ def mylog2(x):
     x_mantissa, x_exponent = np.frexp(x)
     e_mantissa, e_exponent = np.frexp(np.e)
 
+    # Here we evaluate the answer, making sure to rescale the value
+    # so our fit works
     answer = np.polynomial.chebyshev.chebval(4*(x_mantissa - 0.75), coeffs) + x_exponent
     answer /= np.polynomial.chebyshev.chebval(4*(e_mantissa - 0.75), coeffs) + e_exponent
 
@@ -25,10 +27,9 @@ def mylog2(x):
 
 if __name__ == "__main__":
 
-    x = 6
+    # Here I am just testing if the values are good
+    x = np.linspace(1, 100, 1001)
     test = mylog2(x)
     true = np.log(x)
-    err = np.abs(test - true)
-    print(test)
-    print(true)
-    print(err)
+    err = np.max(np.abs(test - true))
+    print("max error =", err)

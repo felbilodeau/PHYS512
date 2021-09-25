@@ -17,10 +17,15 @@ def integrate_adaptive(fun, a, b, tol, extra = None):
     # This makes sure we only call the function once
     # per value of x
     for i in range(len(y)):
+
         if values.get(x[i]) == None:
+            # If we don't have it yet we calculate it and put
+            # it in the dictionary
             y[i] = fun(x[i])
             values[x[i]] = y[i]
+
         else:
+            # We take it from the dictionary of we already have it
             y[i] = values.get(x[i])
         
     # Calculate the current dx
@@ -31,7 +36,7 @@ def integrate_adaptive(fun, a, b, tol, extra = None):
 
     area2 = dx * (y[0] + 4*y[1] + 2*y[2] + 4*y[3] + y[4]) / 3 # fine
 
-    # Calcuoate the error based on the two steps
+    # Calculate the error based on the two steps
     err = np.abs(area1 - area2)
 
     # If the error is smaller than our tolerance,
@@ -50,7 +55,7 @@ def integrate_adaptive(fun, a, b, tol, extra = None):
         return left + right
 
 if __name__ == "__main__":
-    
+
     from integrate_adaptive import integrate_adaptive as integrate_adaptive_class
 
     # Define the variable for the number of function calls

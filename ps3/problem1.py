@@ -57,12 +57,12 @@ if __name__ == "__main__":
     y_rk5[0] = 1
 
     # Calculate each value of y in sequence using rk4_step
-    for i in range(1, 201):
+    for i in range(1, len(x)):
         h = x[i] - x[i - 1]
         y[i] = rk4_step(dydx, x[i - 1], y[i - 1], h)
 
     # Calculate each value of y in sequence using rk4_stepd
-    for i in range(1, 68):
+    for i in range(1, len(x_rk5)):
         h = x_rk5[i] - x_rk5[i - 1]
         y_rk5[i] = rk4_stepd(dydx, x_rk5[i - 1], y_rk5[i - 1], h)
 

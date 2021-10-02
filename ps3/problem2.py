@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import BDF
+from scipy.integrate import solve_ivp
 
 # Index         Elements      Half-Life         Half-Life (years)
 #
@@ -60,3 +60,34 @@ def fun(x, y, half_life = [4.468e9, 0.06603, 7.65e-4, 245500, 75380, 1600, 0.010
 
     # Return dydx * ln(2) since these are half-lives
     return np.log(2) * dydx
+
+# Setup the initial values
+y0 = np.zeros(15)
+y0[0] = 1
+
+# Set the range of x values we want
+x0 = 0
+x1 = 5e10
+
+# Solve the ODE using the Radau method
+results = solve_ivp(fun, [x0, x1], y0, 'Radau')
+
+# Plot the ratio of Pb206 to U238
+plt.plot(results.t, results.y[14,:] / results.y[0,:])
+plt.show()
+plt.clf()
+
+# As we can see, we essentially see a simple exponential because U238
+# essentially decays straight to Pb206 because the transition stages
+# have much lower half-lives than U238
+
+# Now we do this again for the ratio of Th230 to U234
+x0 = 1e6
+x1 = 1e7
+
+results = solve_ivp(fun, [x0, x1], y0, 'Radau')
+
+# Plot the ratio of Th230 to U234
+plt.plot(results.t, results.y[4,:] / results.y[3,:])
+plt.show()
+plt.clf()

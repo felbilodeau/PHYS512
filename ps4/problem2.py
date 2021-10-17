@@ -59,6 +59,8 @@ def newton_step(fun, m, data, N_inverse):
     A_m = np.zeros((len(data), len(m)))
     
     # We need to create wrapper functions for each parameter derivative
+    # because I haven't thought of a good way to calculate the gradient
+    # directly yet without doing it separately for each parameter
     def wrapper_fun_H0(H0):
         return fun(H0, m[1], m[2], m[3], m[4], m[5])
 
@@ -121,6 +123,7 @@ if __name__ == '__main__':
     # Tolerance for delta_chisq
     tol = 0.01
 
+    # Calculate the initial chisq
     model = fun(m0[0], m0[1], m0[2], m0[3], m0[4], m0[5])
     chisq = (data - model).transpose() @ N_inverse @ (data - model)
     delta_chisq = tol + 1 # Just to make sure the loop runs at least once

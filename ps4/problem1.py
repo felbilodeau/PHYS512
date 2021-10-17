@@ -1,6 +1,10 @@
 import numpy as np
 import camb
 from matplotlib import pyplot as plt
+import os
+
+path = os.path.realpath(os.path.dirname(__file__))
+os.chdir(path)
 
 # Okay so here I've copied the text script and added another block for
 # the new parameters

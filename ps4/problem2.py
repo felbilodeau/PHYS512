@@ -32,9 +32,14 @@ def get_derivative(fun, m0, dm = None):
         h = 0.05*m0     # 5% difference
 
         # Calculate crudely all the derivatives we need
-        dfdm_minus2h = (fun(m0 - h) - fun(m0 - 3*h)) / (2*h)
-        dfdm_0 = (fun(m0 + h) - fun(m0 - h)) / (2*h)
-        dfdm_plus2h = (fun(m0 + 3*h) - fun(m0 + h)) / (2*h)
+        f_minush = fun(m0 - h)
+        f_minus3h = fun(m0 - 3*h)
+        f_plush = fun(m0 + h)
+        f_plus3h = fun(m0 + 3*h)
+
+        dfdm_minus2h = (f_minush - f_minus3h) / (2*h)
+        dfdm_0 = (f_plush - f_minush) / (2*h)
+        dfdm_plus2h = (f_plus3h - f_plush) / (2*h)
 
         d2fdm2_minush = (dfdm_0 - dfdm_minus2h) / (2*h)
         d2fdm2_plush = (dfdm_plus2h - dfdm_0) / (2*h)
@@ -47,7 +52,7 @@ def get_derivative(fun, m0, dm = None):
 
     # Calculate the derivative with the optimal dm
     derivative = (fun(m0 + dm) - fun(m0 - dm)) / (2*dm)
-    return derivative[:2507]
+    return derivative
 
 def newton_step(fun, m, data, N_inverse):
     # Initialize A_m
@@ -81,7 +86,14 @@ def newton_step(fun, m, data, N_inverse):
     A_m[:,5] = get_derivative(wrapper_fun_ns, m[5])
 
     # Calculate the residuals
-    r = fun(m[0], m[1], m[2], m[3], m[4], m[5])[:2507] - data
+    r = data - fun(m[0], m[1], m[2], m[3], m[4], m[5])
+
+    # Wow okay sorry I need to vent, I spent like 6 hours debugging this program
+    # because it was running but the chi-squared kept increasing with each step instead
+    # of decreasing and you know what the problem was?! In the line above, I wrote
+    # r = fun(m[0], m[1], m[2], m[3], m[4], m[5]) - data instead and that ruined
+    # everything and it took me so long to catch I am so mad at myself oh my god
+    # plz send help :'(
 
     # Calculate delta_m and return
     delta_m = np.linalg.inv(A_m.transpose() @ N_inverse @ A_m) @ A_m.transpose() @ N_inverse @ r
@@ -100,7 +112,8 @@ if __name__ == '__main__':
 
     # Define the function
     def fun(H0, ombh2, omch2, tau, As, ns):
-        return get_spectrum(H0, ombh2, omch2, tau, As, ns, 2508)
+        spectrum = get_spectrum(H0, ombh2, omch2, tau, As, ns, 2508)[:2507]
+        return spectrum
 
     # Calculate N_inverse and initialize delta_m
     N_inverse = np.diag(1 / uncertainties**2)
@@ -109,18 +122,33 @@ if __name__ == '__main__':
     delta_m[:] = 1
 
     # Tolerance for delta_m as a fraction of the parameter
-    tol = 6     # <- with this tolerance it manages to do one step, it diverges on the second step
+    tol = 1     # <- with this tolerance it manages to do two step, tau diverges on the third step
+
+    
+    model = fun(m0[0], m0[1], m0[2], m0[3], m0[4], m0[5])
+    chisq = (data - model).transpose() @ N_inverse @ (data - model)
+    delta_chisq = tol + 1 # Just to make sure the loop runs at least once
+    print(chisq)
 
     # Loop and update m
-    while(np.max(np.abs(delta_m / m0)) >= tol):
+    while(delta_chisq >= tol):
+
         delta_m = newton_step(fun, m0, data, N_inverse)
         m0 += delta_m
-        print(delta_m / m0)
+        # Calculate chisq
+        model = fun(m0[0], m0[1], m0[2], m0[3], m0[4], m0[5])
+        new_chisq = (data - model).transpose() @ N_inverse @ (data - model)
+
+        delta_chisq = np.abs(new_chisq - chisq)
+        chisq = new_chisq
+        print(delta_chisq)
+
+    covariance = np.linalg.inv(model.transpose() @ N_inverse @ model)
+    par_uncertainties = np.sqrt(np.diag(covariance))
 
     print("m0 =", m0)
-    np.savetxt("planck_fit_params.txt", m0)
+    np.savetxt("planck_fit_params.txt", np.hstack((m0, par_uncertainties)))
 
     # Well I've spent an embarassing amount of time on this and I can't get it to converge at all...
-    # This program is super slow because of the dm calculation in get_derivative, and
-    # the value for tau seems to diverge after the first step if tol <= 5.62 or something...
-    # And now I'm out of time to do this assignment. So I guess that's all folks!
+    # This program is super slow because of the dm calculations in get_derivative, and
+    # the value for tau seems to diverge after the second step if tol <= 1.1 or something...

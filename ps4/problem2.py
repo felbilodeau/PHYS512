@@ -97,7 +97,7 @@ def newton_step(fun, m, data, N_inverse):
 
     # Calculate delta_m and return
     delta_m = np.linalg.inv(A_m.transpose() @ N_inverse @ A_m) @ A_m.transpose() @ N_inverse @ r
-    return delta_m
+    return delta_m, A_m
 
 if __name__ == '__main__':
 
@@ -115,40 +115,62 @@ if __name__ == '__main__':
         spectrum = get_spectrum(H0, ombh2, omch2, tau, As, ns, 2508)[:2507]
         return spectrum
 
-    # Calculate N_inverse and initialize delta_m
+    # Calculate N_inverse
     N_inverse = np.diag(1 / uncertainties**2)
 
-    delta_m = np.zeros((len(m0)))
-    delta_m[:] = 1
+    # Tolerance for delta_chisq
+    tol = 0.01
 
-    # Tolerance for delta_m as a fraction of the parameter
-    tol = 1     # <- with this tolerance it manages to do two step, tau diverges on the third step
-
-    
     model = fun(m0[0], m0[1], m0[2], m0[3], m0[4], m0[5])
     chisq = (data - model).transpose() @ N_inverse @ (data - model)
     delta_chisq = tol + 1 # Just to make sure the loop runs at least once
-    print(chisq)
+    print("intial chisq =", chisq)  # ~3272
 
     # Loop and update m
     while(delta_chisq >= tol):
+        # Calculate delta_m for this step
+        delta_m, A_m = newton_step(fun, m0, data, N_inverse)
 
-        delta_m = newton_step(fun, m0, data, N_inverse)
+        # We keep track of A_m to calculate the uncertainties later
+
+        # Update m0 to m0 + delta_m
         m0 += delta_m
-        # Calculate chisq
+
+        # Calculate the new chisq from the new parameters
         model = fun(m0[0], m0[1], m0[2], m0[3], m0[4], m0[5])
         new_chisq = (data - model).transpose() @ N_inverse @ (data - model)
 
+        # Calculate delta_chisq and update chisq to new_chisq
         delta_chisq = np.abs(new_chisq - chisq)
         chisq = new_chisq
-        print(delta_chisq)
 
-    covariance = np.linalg.inv(model.transpose() @ N_inverse @ model)
+        print("delta_chisq =", delta_chisq)
+
+    # Print the final chisq
+    print("final chisq =", chisq)   # ~2576
+
+    # Calculate the covariance and uncertainties using A_m and N_inverse
+    covariance = np.linalg.inv(A_m.transpose() @ N_inverse @ A_m)
     par_uncertainties = np.sqrt(np.diag(covariance))
 
+    # Print the parameters we obtained
     print("m0 =", m0)
-    np.savetxt("planck_fit_params.txt", np.hstack((m0, par_uncertainties)))
 
-    # Well I've spent an embarassing amount of time on this and I can't get it to converge at all...
-    # This program is super slow because of the dm calculations in get_derivative, and
-    # the value for tau seems to diverge after the second step if tol <= 1.1 or something...
+    # Open a file to save the parameters and their uncertainties
+    output = open("planck_fit_params.txt", 'w')
+
+    output.write("# H0 ombh2 omch2 tau As ns\n")
+    output.write("%.18e %.18e %.18e %.18e %.18e %.18e\n" % (m0[0], m0[1], m0[2], m0[3], m0[4], m0[5]))
+    output.write("%.18e %.18e %.18e %.18e %.18e %.18e" % (par_uncertainties[0], par_uncertainties[1],
+                     par_uncertainties[2], par_uncertainties[3], par_uncertainties[4], par_uncertainties[5]))
+    
+    output.close()
+
+    # So we're not quite in range of the optimal chi-squared value of 2501 +/- 70 with this fit,
+    # but with a final chi-squared of 2576 we're very nearly there, and this might be close
+    # to the best we can do with this fit given that the delta_chisq for the last step is
+    # around 4e-4 and should only become smaller as the steps increase.
+
+    # Also it asks to keep track of the curvature matrix but I'm not sure what that means,
+    # am I supposed to calculate the Hessian matrix or something? I don't know, I might
+    # come back to this later if I find out.

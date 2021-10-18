@@ -114,3 +114,5 @@ if __name__ == '__main__':
             output.write("\n")
 
     output.close()
+
+    # See chain_check.py for the analysis of the chain

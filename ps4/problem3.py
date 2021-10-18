@@ -33,7 +33,7 @@ def get_chisq(params, data, noise = None):
     prediction = get_spectrum(params)
 
     # Check if noise was provided
-    if noise == None:
+    if np.any(noise == None):
         # If not, just sum the residuals squared
         return np.sum((data - prediction)**2)
     else:
@@ -70,6 +70,7 @@ def run_mcmc(start_params, step_size, data, chisq_fun, nstep = 100, noise = None
         # Update the chain
         params_chain[:,i] = params
         chisq_chain[i] = chisq
+        print("step", i+1, "out of", nstep, "done")
 
     # Return the params and chisq chains
     return params_chain, chisq_chain
@@ -86,4 +87,30 @@ if __name__ == '__main__':
     text_file = np.loadtxt("planck_fit_params.txt", float, '#')
 
     start_params = text_file[0]
-    noise = text_file[1]
+    uncertainties = text_file[1]
+
+    # Define the step size as 1% the uncertainties in the parameters
+    # since we are already close to a minimum from the Newton optimization
+    step_size = uncertainties.copy() * 0.01
+
+    # Define the number of steps
+    nstep = 1000
+
+    # Run the mcmc
+    params_chain, chisq_chain = run_mcmc(start_params, step_size, data, get_chisq, nstep, noise)
+
+    # Save the chain with the chisq as the first column
+    output = open("planck_chain.txt", "w")
+
+    output.write("# chisq H0 ombh2 omch2 tau As ns\n")
+    for i in range(nstep):
+        output.write("%.18e " % chisq_chain[i])
+        for j in range(len(start_params)):
+            output.write("%.18e" % params_chain[j,i])
+            if j != (len(start_params) - 1):
+                output.write(" ")
+
+        if i != (nstep - 1):
+            output.write("\n")
+
+    output.close()

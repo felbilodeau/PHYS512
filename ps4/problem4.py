@@ -6,7 +6,8 @@ path = os.path.realpath(os.path.dirname(__file__))
 os.chdir(path)
 
 # Okay so I'm basically copying the code from problem3.py except I will add
-# the prior in the chisq calculation
+# the prior in the chisq calculation and start with the parameters i got from 
+# the last chain as well as their uncertainties as the step size
 
 # First we need the function to get the prediction from CAMB
 def get_spectrum(pars,lmax=2508):
@@ -43,7 +44,7 @@ def get_chisq(params, data, noise = None, par_priors = None, par_errs = None):
 
     # Calculate the prior chisq
     if par_priors is not None:
-        params_shift = params - par_errs
+        params_shift = params - par_priors
         chisq += np.sum((params_shift/par_errs)**2)
 
     return chisq
@@ -92,16 +93,12 @@ if __name__ == '__main__':
     data = text_file[1]
     noise = 0.5 * (text_file[2] + text_file[3])
 
-    # Load the parameters we found from problem 2 as our starting point
-    text_file = np.loadtxt("planck_fit_params.txt", float, '#')
-
-    start_params = text_file[0]
-    uncertainties = text_file[1]
+    # Get the starting params as the ones we got from problem3.py
+    start_params = np.array([68.44, 0.022369, 0.11738, 0.0808, 2.200e-9, 0.9725])
     nparam = len(start_params)
 
-    # Define the step size as 1% the uncertainties in the parameters
-    # since we are already close to a minimum from the Newton optimization
-    step_size = uncertainties.copy() * 0.01
+    # Define the step size the uncertainties we got from problem3.py
+    step_size = np.array([0.08, 0.000014, 0.00015, 0.0031, 0.014e-9, 0.0007])
 
     # Define the number of steps
     nstep = 1000

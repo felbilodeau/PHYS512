@@ -33,7 +33,7 @@ def get_chisq(params, data, noise = None):
     prediction = get_spectrum(params)
 
     # Check if noise was provided
-    if np.any(noise == None):
+    if noise is None:
         # If not, just sum the residuals squared
         return np.sum((data - prediction)**2)
     else:

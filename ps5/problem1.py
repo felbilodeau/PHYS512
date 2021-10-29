@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 # Here is how I did it:
 # First, we need to find some function g(x) which has the effect of
@@ -40,6 +41,9 @@ def gaussian(x, mu, sigma):
     return 1 / np.sqrt(2*np.pi*sigma**2) * np.exp(-1/2 * ((x - mu) / sigma)**2)
 
 if __name__ == '__main__':
+    # Set up relative path handling
+    path = os.path.realpath(os.path.dirname(__file__))
+    os.chdir(path)
 
     # Define an x range and calculate the standard gaussian at 0
     x = np.linspace(-5, 5, 1001)

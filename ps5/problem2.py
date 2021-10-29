@@ -36,8 +36,8 @@ if __name__ == '__main__':
 
     # Here we plot the correlation and save it to 'gauss_corr.png'
     plt.plot(x, corr, label="correlation")
-    plt.xlabel(r"$x$")
-    plt.ylabel(r"$y$")
+    plt.xlabel(r"$y$")
+    plt.ylabel(r"correlation")
     plt.title("Correlation of standard gaussian with itself")
     plt.legend()
     plt.savefig('gauss_corr.png', bbox_inches='tight')

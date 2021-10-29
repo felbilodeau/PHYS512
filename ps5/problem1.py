@@ -46,9 +46,9 @@ if __name__ == '__main__':
     y = gaussian(x, 0, 1)
 
     # Calculate the function shifted by half the array length
-    # Taking the absolute value because the imaginary part will 
+    # Taking the real part because the imaginary part will 
     # be like 1e-17
-    y_mod = np.abs(convolution_shift(y, len(x)/2))
+    y_mod = np.real(convolution_shift(y, len(x)/2))
 
     # Plot and save this graph
     plt.plot(x, y, label="original gaussian")

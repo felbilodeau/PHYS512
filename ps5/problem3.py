@@ -1,7 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from problem1 import convolution_shift, gaussian
 from problem2 import correlation
+
+# Set up relative path handling
+path = os.path.realpath(os.path.dirname(__file__))
+os.chdir(path)
 
 # I'm going to assume here that I'm supposed to correlate a shifted
 # Gaussian with a non-shifted Gaussian, because otherwise, we will just

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from problem1 import gaussian
 
 # Okay so here is the function I wrote
@@ -19,6 +20,10 @@ def correlation(f, g):
     return np.fft.fftshift(np.fft.ifft(result_ft))
 
 if __name__ == '__main__':
+    # Set up relative path handling
+    path = os.path.realpath(os.path.dirname(__file__))
+    os.chdir(path)
+
     # Define a range and calculate the standard gaussian
     x = np.linspace(-5, 5, 1001)
     y = gaussian(x, 0, 1)

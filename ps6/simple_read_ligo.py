@@ -1,8 +1,4 @@
-import numpy as np
-from matplotlib import pyplot as plt
 import h5py
-import glob
-plt.ion()
 
 def read_template(filename):
     dataFile=h5py.File(filename,'r')
@@ -34,13 +30,13 @@ def read_file(filename):
 
 #fnames=glob.glob("[HL]-*.hdf5")
 #fname=fnames[0]
-fname='H-H1_LOSC_4_V2-1126259446-32.hdf5'
-print('reading file ',fname)
-strain,dt,utc=read_file(fname)
+# fname='H-H1_LOSC_4_V2-1126259446-32.hdf5'
+# print('reading file ',fname)
+# strain,dt,utc=read_file(fname)
 
 #th,tl=read_template('GW150914_4_template.hdf5')
-template_name='GW150914_4_template.hdf5'
-th,tl=read_template(template_name)
+# template_name='GW150914_4_template.hdf5'
+# th,tl=read_template(template_name)
 
 
 #spec,nu=measure_ps(strain,do_win=True,dt=dt,osamp=16)

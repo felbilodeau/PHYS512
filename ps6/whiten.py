@@ -9,7 +9,7 @@ def whiten(strain, interpolated_psd, dt):
     # Calculate the FT of the data
     strain_ft = np.fft.rfft(strain)
 
-    # We need to make sure we normalize this properly with 
+    # We need to make sure we normalize this properly with sqrt(2dt)
     norm = np.sqrt(2*dt)
 
     # Then we calculate the whitened FT

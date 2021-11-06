@@ -105,6 +105,7 @@ for i in events_to_analyze:
     data_file_L1 = events[i][1]
     template_filename = events[i][2]
     event_name = event_names[i]
+    print("Event " + event_name)
 
     # Read the files and template
     strain_H1,dt,utc = read_file(data_file_H1)
@@ -149,6 +150,8 @@ for i in events_to_analyze:
 
     SNR_max_H1 = np.max(SNR_H1)
     SNR_max_L1 = np.max(SNR_L1)
+    print("SNR for H1 at event =", SNR_max_H1)
+    print("SNR for L1 at event =", SNR_max_L1)
 
     # Shift the templates so they line up at the correct times
     shifted_template_H1 = np.roll(template_phased_H1, max_index_H1 - n // 2)
@@ -170,7 +173,9 @@ for i in events_to_analyze:
     template_white_H1 = whiten(shifted_template_H1, psd_interp_H1, dt)
     template_white_L1 = whiten(shifted_template_L1, psd_interp_L1, dt)
 
-    # We could probably also try a high frequency filter to remove high frequency noise
+    # We could probably also try a band-pass filter to remove more noise
+    # This is the simplest band-pass filter where I just completely suppress the modes
+    # outside the frequency range
     # Taking the FTs
     H1_FT = np.fft.rfft(strain_H1_white)
     H1_template_FT = np.fft.rfft(template_white_H1)
@@ -184,11 +189,12 @@ for i in events_to_analyze:
     indices_max = np.where(freqs_filter > cutoff_freq_max)[0]
     indices_min = np.where(freqs_filter < cutoff_freq_min)[0]
 
-    # Cutting off the higher frequencies
+    # Cutting off the higher and lower frequencies
     H1_FT[indices_max] = 0
     H1_FT[indices_min] = 0
     H1_template_FT[indices_max] = 0
     H1_template_FT[indices_min] = 0
+
     L1_FT[indices_max] = 0
     L1_FT[indices_min] = 0
     L1_template_FT[indices_max] = 0
@@ -207,6 +213,7 @@ for i in events_to_analyze:
     start_L1 = int(max_index_L1 - 0.05*fs)
     stop_L1 = int(max_index_L1 + 0.05*fs)
 
+    # Plotting the 'fits' for both detectors
     fig, (ax1, ax2) = plt.subplots(2,1)
     ax1.plot(time[start_H1:stop_H1], strain_H1_white_filter[start_H1:stop_H1])
     ax1.plot(time[start_H1:stop_H1], template_white_filter_H1[start_H1:stop_H1])
@@ -219,3 +226,8 @@ for i in events_to_analyze:
     ax2.set_ylabel("Amplitude")
 
     plt.show()
+
+    # So as we can see, the events match up pretty well with the expected template,
+    # which is a good sign
+
+    print()

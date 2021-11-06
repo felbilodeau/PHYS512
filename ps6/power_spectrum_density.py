@@ -2,7 +2,7 @@ import numpy as np
 from windowmaker import make_flat_window
 
 # A function to average out the psd
-def get_average_psd(data, segment_length, windowing = True):
+def get_average_psd(data, segment_length, fs, windowing = True):
     # Since we are using rfft, the output will have segment_length / 2 + 1 elements
     noutput = int(segment_length / 2) + 1
 
@@ -34,6 +34,10 @@ def get_average_psd(data, segment_length, windowing = True):
 
         # Calculate and add the psd for this slice
         psd += np.abs(data_slice_ft)**2
+
+    # If we are windowing, normalize by the window
+    if windowing:
+        psd /= np.abs(window).sum()**2
 
     # Return the summed up psd
     return psd
@@ -70,6 +74,10 @@ def get_average_psd_complex(data, segment_length, windowing = True):
 
         # Calculate and add the psd for this slice
         psd += np.abs(data_slice_ft)**2
+
+    # If we are windowing, normalize by the window
+    if windowing:
+        psd /= np.abs(window).sum()**2
 
     # Return the summed up psd
     return psd

@@ -9,7 +9,7 @@ def get_average_psd(data, segment_length, fs, windowing = True):
     # This is just in case you did not want to window the data, you can set windowing = False
     # I mostly wrote this for testing purposes
     if windowing:
-        window = make_flat_window(segment_length, segment_length // 6)
+        window = make_flat_window(segment_length, segment_length // 5)
     else:
         window = 1
 

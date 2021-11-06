@@ -230,4 +230,26 @@ for i in events_to_analyze:
     # So as we can see, the events match up pretty well with the expected template,
     # which is a good sign
 
+    # Now we will estimate the frequency of the wave
+    # First, take the Fourier transform of the template before all the noise filtering
+    template_FT_H1 = np.abs(np.fft.rfft(template_phased_H1))
+    template_FT_L1 = np.abs(np.fft.rfft(template_phased_L1))
+    freqs_wave = np.fft.rfftfreq(len(template_phased_H1), dt)
+
+    print(len(freqs_wave))
+    print(len(template_FT_H1))
+
+    # Get the max positions
+    index_max_H1 = np.argmax(template_FT_H1)
+    index_max_L1 = np.argmax(template_FT_L1)
+
+    # So I guess we'll take like an average of the frequencies around the peak? Because I'm not sure
+    # that this has a single frequency, doesn't it increase with time or something? Anyway..
+    freq_wave_H1 = np.sum((freqs_wave * template_FT_H1)[index_max_H1-10:index_max_H1+10]) / np.sum(template_FT_H1[index_max_H1-10:index_max_H1+10])
+    freq_wave_L1 = np.sum((freqs_wave * template_FT_L1)[index_max_L1-10:index_max_L1+10]) / np.sum(template_FT_L1[index_max_L1-10:index_max_L1+10])
+
+    # The answers I get from this seem very wrong, they are like between 5 and 14 Hz for some reason..
+    print("Frequency of GW at H1 =", freq_wave_H1)
+    print("Frequency of GW at L1 =", freq_wave_L1)
+
     print()

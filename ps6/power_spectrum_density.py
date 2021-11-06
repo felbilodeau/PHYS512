@@ -2,7 +2,7 @@ import numpy as np
 from windowmaker import make_flat_window
 
 # A function to average out the psd
-def get_average_psd(data, segment_length, fs, windowing = True):
+def get_average_psd(data, segment_length, windowing = True):
     # Since we are using rfft, the output will have segment_length / 2 + 1 elements
     noutput = int(segment_length / 2) + 1
 

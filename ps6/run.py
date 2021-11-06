@@ -18,11 +18,13 @@ path = os.path.realpath(os.path.dirname(__file__))
 os.chdir(path)
 
 # Change this list to choose which events get analyzed
-events_to_analyze = [0,1,2,3]
+events_to_analyze = [0, 1, 2, 3]
 # 0: GW150914
 # 1: LVT151012
 # 2: GW151226
 # 3: GW170104
+
+event_names = ["GW150914", "LVT151012", "GW151226", "GW170104"]
 
 # This is from the json file, but since it's just 4 events I figured I'd just copy them since I don't know how jsons work yet
 events = [["H-H1_LOSC_4_V2-1126259446-32.hdf5", "L-L1_LOSC_4_V2-1126259446-32.hdf5", "GW150914_4_template.hdf5"],
@@ -36,7 +38,7 @@ event_fbands = [[43.0,300.0],
                 [43.0,800.0]]
 
 
-# Part a)
+# Part a):
 # 1. Estimate the power spectrum density of the data by averaging over smaller bins
 
 # The sampling rate fs is always 4096 on all events so we'll just set it here
@@ -52,8 +54,8 @@ strain_L1,dt,utc = read_file(data_file_L1)
 
 # Get the power spectrum for each strains
 segment_length = 4*fs     # Set the segment size to 4 seconds of data
-psd_H1 = get_average_psd(strain_H1, segment_length, fs)
-psd_L1 = get_average_psd(strain_L1, segment_length, fs)
+psd_H1 = get_average_psd(strain_H1, segment_length)
+psd_L1 = get_average_psd(strain_L1, segment_length)
 
 # 2. Whiten the data using the PSD
 # We need to interpolate the data with all the frequencies because the averaged psd has less points
@@ -96,17 +98,53 @@ ax1.set_title('Comparison of original and white data for L1 detector')
 plt.show()
 # Yep, we get much less low frequency noise again
 
-filename = "H-H1_LOSC_4_V2-1126259446-32.hdf5"
-template_filename = "GW150914_4_template.hdf5"
+# Part b):
+for i in events_to_analyze:
+    # Extract the data file names
+    data_file_H1 = events[i][0]
+    data_file_L1 = events[i][1]
+    template_filename = events[i][2]
+    event_name = event_names[i]
 
-strain,dt,utc = read_file(filename)
-th, tl = read_template(template_filename)
-n = len(strain)
-window = make_flat_window(n, n//5)
+    # Read the files and template
+    strain_H1,dt,utc = read_file(data_file_H1)
+    strain_H2,dt,utc = read_file(data_file_L1)
+    th, tl = read_template(template_filename)
 
-NFFT = fs * 4
+    # Create a window for the match filtering
+    n = len(strain_H1)
+    window = make_flat_window(n, n//5)
 
-SNR = match_filter(strain, th, dt, fs, window, NFFT)
+    # Set the segment length to 4 seconds of data
+    segment_length = fs * 4
 
-plt.plot(SNR)
-plt.show()
+    # We actually whiten the data in the match filtering here, not before
+    SNR_H1 = match_filter(strain_H1, th, dt, fs, window, segment_length)
+    SNR_L1 = match_filter(strain_H1, tl, dt, fs, window, segment_length)
+
+    # Produce the time array given the dt and the number of data points
+    time = np.linspace(0, n*dt, n)
+
+    # Plot both SNR
+    fig, (ax1, ax2) = plt.subplots(2,1)
+
+    ax1.plot(time, SNR_H1, label = "H1 detector")
+    ax1.set_ylabel("SNR")
+    ax1.set_title("SNR for event " + event_name)
+    ax1.legend()
+
+    ax2.plot(time, SNR_L1, label = "L1 detector")
+    ax2.set_ylabel("SNR")
+    ax2.set_xlabel("Time (s)")
+    ax2.legend()
+
+    plt.show()
+
+    # Extract the time at the peaks
+    max_index_H1 = np.argmax(SNR_H1)
+    max_index_L1 = np.argmax(SNR_L1)
+    peak_time_H1 = time[max_index_H1]
+    peak_time_L1 = time[max_index_L1]
+
+    shifted_template_H1 = np.roll(th, max_index_H1 - n // 2)
+    shifted_template_L1 = np.roll(th, max_index_L1 - n // 2)

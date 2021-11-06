@@ -207,10 +207,10 @@ for i in events_to_analyze:
     template_white_filter_L1 = np.fft.irfft(L1_template_FT)
 
     # Setting a plotting range around the event
-    start_H1 = int(max_index_H1 - 0.05*fs)
+    start_H1 = int(max_index_H1 - 0.1*fs)
     stop_H1 = int(max_index_H1 + 0.05*fs)
     
-    start_L1 = int(max_index_L1 - 0.05*fs)
+    start_L1 = int(max_index_L1 - 0.1*fs)
     stop_L1 = int(max_index_L1 + 0.05*fs)
 
     # Plotting the 'fits' for both detectors

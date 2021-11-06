@@ -108,7 +108,7 @@ for i in events_to_analyze:
 
     # Read the files and template
     strain_H1,dt,utc = read_file(data_file_H1)
-    strain_H2,dt,utc = read_file(data_file_L1)
+    strain_L1,dt,utc = read_file(data_file_L1)
     th, tl = read_template(template_filename)
 
     # Create a window for the match filtering
@@ -120,7 +120,7 @@ for i in events_to_analyze:
 
     # We actually whiten the data in the match filtering here, not before
     SNR_H1, template_phased_H1 = match_filter(strain_H1, th, tl, dt, fs, window, segment_length)
-    SNR_L1, template_phased_L1 = match_filter(strain_H1, th, tl, dt, fs, window, segment_length)
+    SNR_L1, template_phased_L1 = match_filter(strain_L1, th, tl, dt, fs, window, segment_length)
 
     # Produce the time array given the dt and the number of data points
     time = np.linspace(0, n*dt, n)
@@ -171,7 +171,36 @@ for i in events_to_analyze:
     template_white_L1 = whiten(shifted_template_L1, psd_interp_L1, dt)
 
     # We could probably also try a high frequency filter to remove high frequency noise
+    # Taking the FTs
+    H1_FT = np.fft.rfft(strain_H1_white)
+    H1_template_FT = np.fft.rfft(template_white_H1)
+    L1_FT = np.fft.rfft(strain_L1_white)
+    L1_template_FT = np.fft.rfft(template_white_L1)
 
+    # Getting the frequencies and the cutoff + indices
+    freqs_filter = np.fft.rfftfreq(len(H1_FT), dt)
+    cutoff_freq_max = event_fbands[i][1]
+    cutoff_freq_min = event_fbands[i][0]
+    indices_max = np.where(freqs_filter > cutoff_freq_max)[0]
+    indices_min = np.where(freqs_filter < cutoff_freq_min)[0]
+
+    # Cutting off the higher frequencies
+    H1_FT[indices_max] = 0
+    H1_FT[indices_min] = 0
+    H1_template_FT[indices_max] = 0
+    H1_template_FT[indices_min] = 0
+    L1_FT[indices_max] = 0
+    L1_FT[indices_min] = 0
+    L1_template_FT[indices_max] = 0
+    L1_template_FT[indices_min] = 0
+
+    # Reconverting
+    strain_H1_white_filter = np.fft.irfft(H1_FT)
+    template_white_filter_H1 = np.fft.irfft(H1_template_FT)
+    strain_L1_white_filter = np.fft.irfft(L1_FT)
+    template_white_filter_L1 = np.fft.irfft(L1_template_FT)
+
+    # Setting a plotting range around the event
     start_H1 = int(max_index_H1 - 0.05*fs)
     stop_H1 = int(max_index_H1 + 0.05*fs)
     
@@ -179,10 +208,14 @@ for i in events_to_analyze:
     stop_L1 = int(max_index_L1 + 0.05*fs)
 
     fig, (ax1, ax2) = plt.subplots(2,1)
-    ax1.plot(time[start_H1:stop_H1], strain_H1_white[start_H1:stop_H1])
-    ax1.plot(time[start_H1:stop_H1], template_white_H1[start_H1:stop_H1])
+    ax1.plot(time[start_H1:stop_H1], strain_H1_white_filter[start_H1:stop_H1])
+    ax1.plot(time[start_H1:stop_H1], template_white_filter_H1[start_H1:stop_H1])
+    ax1.set_ylabel("Amplitude")
+    ax1.set_title("Event " + event_name)
     
-    ax2.plot(time[start_L1:stop_L1], strain_L1_white[start_L1:stop_L1])
-    ax2.plot(time[start_L1:stop_L1], template_white_L1[start_L1:stop_L1])
+    ax2.plot(time[start_L1:stop_L1], strain_L1_white_filter[start_L1:stop_L1])
+    ax2.plot(time[start_L1:stop_L1], template_white_filter_L1[start_L1:stop_L1])
+    ax2.set_xlabel("Time (s)")
+    ax2.set_ylabel("Amplitude")
 
     plt.show()

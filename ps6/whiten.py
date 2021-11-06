@@ -1,6 +1,6 @@
 import numpy as np
 
-# Whitens the data given a function interpolated_psd to interpolate a smoothed psd
+# Whitens the data given an array interpolated_psd which gives the smoothed psd interpolated
 def whiten(strain, interpolated_psd, dt):
     # Get the number of data points and the frequencies associated with them
     n = len(strain)
@@ -13,7 +13,7 @@ def whiten(strain, interpolated_psd, dt):
     norm = np.sqrt(2*dt)
 
     # Then we calculate the whitened FT
-    white_data_FT = strain_ft / np.sqrt(interpolated_psd(freqs)) * norm
+    white_data_FT = strain_ft / np.sqrt(interpolated_psd) * norm
 
     # Finally, reconvert the FT to get the whitened data and return
     white_data = np.fft.irfft(white_data_FT, n)

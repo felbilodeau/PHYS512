@@ -119,8 +119,8 @@ for i in events_to_analyze:
     segment_length = fs * 4
 
     # We actually whiten the data in the match filtering here, not before
-    SNR_H1 = match_filter(strain_H1, th, dt, fs, window, segment_length)
-    SNR_L1 = match_filter(strain_H1, tl, dt, fs, window, segment_length)
+    SNR_H1, template_phased_H1 = match_filter(strain_H1, th, tl, dt, fs, window, segment_length)
+    SNR_L1, template_phased_L1 = match_filter(strain_H1, th, tl, dt, fs, window, segment_length)
 
     # Produce the time array given the dt and the number of data points
     time = np.linspace(0, n*dt, n)
@@ -143,8 +143,46 @@ for i in events_to_analyze:
     # Extract the time at the peaks
     max_index_H1 = np.argmax(SNR_H1)
     max_index_L1 = np.argmax(SNR_L1)
+
     peak_time_H1 = time[max_index_H1]
     peak_time_L1 = time[max_index_L1]
 
-    shifted_template_H1 = np.roll(th, max_index_H1 - n // 2)
-    shifted_template_L1 = np.roll(th, max_index_L1 - n // 2)
+    SNR_max_H1 = np.max(SNR_H1)
+    SNR_max_L1 = np.max(SNR_L1)
+
+    # Shift the templates so they line up at the correct times
+    shifted_template_H1 = np.roll(template_phased_H1, max_index_H1 - n // 2)
+    shifted_template_L1 = np.roll(template_phased_L1, max_index_L1 - n // 2)
+
+    # Whiten the template and the data
+    psd_H1 = get_average_psd(strain_H1, segment_length)
+    psd_L1 = get_average_psd(strain_L1, segment_length)
+
+    freqs = np.fft.rfftfreq(len(strain_H1), dt)
+    psd_freqs = np.fft.rfftfreq(len(psd_H1)*2 - 1, dt)  # *2 - 1 because we are using rfftfreq
+
+    psd_interp_H1 = np.interp(freqs, psd_freqs, psd_H1)
+    psd_interp_L1 = np.interp(freqs, psd_freqs, psd_L1)
+
+    strain_H1_white = whiten(strain_H1, psd_interp_H1, dt)
+    strain_L1_white = whiten(strain_L1, psd_interp_L1, dt)
+
+    template_white_H1 = whiten(shifted_template_H1, psd_interp_H1, dt)
+    template_white_L1 = whiten(shifted_template_L1, psd_interp_L1, dt)
+
+    # We could probably also try a high frequency filter to remove high frequency noise
+
+    start_H1 = int(max_index_H1 - 0.05*fs)
+    stop_H1 = int(max_index_H1 + 0.05*fs)
+    
+    start_L1 = int(max_index_L1 - 0.05*fs)
+    stop_L1 = int(max_index_L1 + 0.05*fs)
+
+    fig, (ax1, ax2) = plt.subplots(2,1)
+    ax1.plot(time[start_H1:stop_H1], strain_H1_white[start_H1:stop_H1])
+    ax1.plot(time[start_H1:stop_H1], template_white_H1[start_H1:stop_H1])
+    
+    ax2.plot(time[start_L1:stop_L1], strain_L1_white[start_L1:stop_L1])
+    ax2.plot(time[start_L1:stop_L1], template_white_L1[start_L1:stop_L1])
+
+    plt.show()

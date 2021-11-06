@@ -4,11 +4,13 @@ from matplotlib import mlab
 from windowmaker import make_flat_window
 
 # Function which performs match filtering on a strain time-series with a template
-def match_filter(strain, template, dt, fs, window, segment_length):
+def match_filter(strain, th, tl, dt, fs, window, segment_length):
     # Get the length of the strain and extract the freauencies and df we will have in the Fourier transform
     n = len(strain)
     freqs = np.fft.fftfreq(n, dt)
     df = np.abs(freqs[0] - freqs[1])
+
+    template = th + tl*1j
 
     # Calculate the FT of the template using the window, and normalized by the sampling rate fs
     template_fft = np.fft.fft(template * window) / fs
@@ -50,6 +52,12 @@ def match_filter(strain, template, dt, fs, window, segment_length):
     peaksample = int(strain.size / 2)
     SNR_complex = np.roll(SNR_complex, peaksample)
 
-    # Take the absolute value and return
+    # Take the absolute value
     SNR = np.abs(SNR_complex)
-    return SNR, sigma
+
+    # Calculate the phase and amplitude modifier for the template
+    phase = np.angle(SNR_complex[np.argmax(SNR)])
+    template_phased = np.real(template * np.exp(1j*phase))
+    amp_factor = sigma / np.max(SNR)
+
+    return SNR, template_phased / np.real(amp_factor)

@@ -4,7 +4,7 @@ from matplotlib import mlab
 from windowmaker import make_flat_window
 
 # Function which performs match filtering on a strain time-series with a template
-def match_filter(strain, template, dt, fs, window, NFFT):
+def match_filter(strain, template, dt, fs, window, segment_length):
     # Get the length of the strain and extract the freauencies and df we will have in the Fourier transform
     n = len(strain)
     freqs = np.fft.fftfreq(n, dt)
@@ -23,13 +23,13 @@ def match_filter(strain, template, dt, fs, window, NFFT):
     # psd_interp = np.interp(np.abs(freqs), psd_freqs, strain_psd)
 
     # Create a window for the psd, which we will use to whiten the SNR
-    psd_window = make_flat_window(NFFT, NFFT//5)
+    psd_window = make_flat_window(segment_length, segment_length//5)
 
     # Define the overlap to be half the segment size
-    noverlap = NFFT/2
+    noverlap = segment_length/2
 
     # Get the averaged psd using the matplotlib function
-    strain_psd, psd_freqs = mlab.psd(strain, Fs = fs, NFFT = NFFT, window = psd_window, noverlap = noverlap)
+    strain_psd, psd_freqs = mlab.psd(strain, Fs = fs, NFFT = segment_length, window = psd_window, noverlap = noverlap)
 
     # Interpolate between the reduced data points in the psd to have n data points
     psd_interp = np.interp(np.abs(freqs), psd_freqs, strain_psd)

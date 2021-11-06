@@ -52,4 +52,4 @@ def match_filter(strain, template, dt, fs, window, segment_length):
 
     # Take the absolute value and return
     SNR = np.abs(SNR_complex)
-    return SNR
+    return SNR, sigma

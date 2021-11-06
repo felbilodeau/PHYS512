@@ -22,7 +22,7 @@ def match_filter(strain, template, dt, fs, window, NFFT):
     # psd_freqs = np.fft.fftfreq(len(strain_psd), dt)
     # psd_interp = np.interp(np.abs(freqs), psd_freqs, strain_psd)
 
-    # Create a window for the psd
+    # Create a window for the psd, which we will use to whiten the SNR
     psd_window = make_flat_window(NFFT, NFFT//5)
 
     # Define the overlap to be half the segment size
@@ -37,7 +37,7 @@ def match_filter(strain, template, dt, fs, window, NFFT):
     # Calculate the FT of the strain using the same window as the template, and also scale it by the sampling rate fs
     strain_fft = np.fft.fft(strain * window) / fs
 
-    # Perform the match filtering and invert the FT to get the time of the event
+    # Perform the match filtering and invert the FT to get the time of the event and whiten the data
     mf_ft = strain_fft * template_fft.conj() / psd_interp
     mf = np.fft.ifft(mf_ft) * 2*fs
 

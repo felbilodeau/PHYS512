@@ -17,7 +17,7 @@ def conjugate_grad_solve(A, b, x, tol):
     n = len(b)
 
     # This flag to see if it worked
-    worked = False
+    converged = False
 
     # Loop through once for each dimension
     for i in range(n):
@@ -33,7 +33,7 @@ def conjugate_grad_solve(A, b, x, tol):
 
         # If the residual is smaller than the tolerance, break and return
         if np.sqrt(r.T @ r) < tol:
-            worked = True
+            converged = True
             break
         
         # Otherwise, calculate the new basis vector and update the length of residuals squared
@@ -41,8 +41,8 @@ def conjugate_grad_solve(A, b, x, tol):
         rsquared = rsquared_new
 
     # If we did not exceed the tolerance, print a message
-    if not worked:
+    if not converged:
         print("WARNING: Did not reach desired tolerance, answer may not be accurate.")
-        
+
     # Return the solution
     return x_solve

@@ -1,11 +1,11 @@
 import numpy as np
 
-def conjugate_grad_solve(A, b, x, tol):
+def conjugate_grad_solve(fun, mask, b, x, tol=1e-9, niter=50):
     # Copy the initial guess x into a new vector which we will modify
     x_solve = np.copy(x)
 
     # Calculate the residual with the initial guess
-    r = b - A @ x
+    r = b - fun(x, mask)
 
     # Calculate the length squared of the residual
     rsquared = r.T @ r
@@ -13,22 +13,20 @@ def conjugate_grad_solve(A, b, x, tol):
     # Copy the residual into a new vector (representing the basis vector p_i)
     p = np.copy(r)
 
-    # Calculate the number of dimensions of the vector
-    n = len(b)
-
     # This flag to see if it worked
     converged = False
 
     # Loop through once for each dimension
-    for i in range(n):
+    for i in range(niter):
         # Calculate the coefficient alpha for the new solution
-        alpha = rsquared / (p.T @ A @ p)
+        Ap = fun(p, mask)
+        alpha = rsquared / (p.T @ Ap)
 
         # Update the solution vector using alpha and p
         x_solve = x_solve + alpha * p
 
         # Calculate the new residuals and length squared
-        r = r - alpha * A @ p
+        r = r - alpha * Ap
         rsquared_new = r.T @ r
 
         # If the residual is smaller than the tolerance, break and return

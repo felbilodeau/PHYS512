@@ -53,3 +53,11 @@ if __name__ == '__main__':
     np.savetxt("potential_new.txt", V_new, '%.18e', ';')
     np.savetxt("charge_raw.txt", rho_raw, '%.18e', ';')
     np.savetxt("charge_new.txt", rho_new, '%.18e', ';')
+
+    # So I tried to make the solver work to find the charge instead of the potential,
+    # but it didn't seem to want to converge for some reason. I think it's probably because
+    # my guess for the RHS potential is like only a square, but obviously the potential
+    # is not zero everywhere except on the sides of the box, so that didn't work...
+    # I wasn't super sure about how to calculate the residuals properly and get the
+    # proper gradient descent if I was looking for the charge but my boundary condition
+    # was a potential.

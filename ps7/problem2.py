@@ -1,10 +1,7 @@
 import numpy as np
 from conjgrad import conjugate_grad_solve
 from potential import sum_neighbors
-import matplotlib.pyplot as plt
-
-G = np.loadtxt("potential.txt", float, '#', ';')
-G_FT = np.fft.fft(G)
+import os
 
 def laplace(V, mask):
     # Copy the potential and set it to zero on the mask
@@ -32,15 +29,27 @@ def get_RHS(V, mask):
     RHS[mask] = 0
     return RHS
 
-V = np.loadtxt("mask.txt", int, '#', ';')
-mask = np.where(V == 1)
+if __name__ == '__main__':
+    # Set up relative path handling
+    path = os.path.realpath(os.path.dirname(__file__))
+    os.chdir(path)
 
-b = get_RHS(V, mask)
-V_raw = conjugate_grad_solve(laplace, mask, b, 0*b, 1e-9, V.shape[0]*3)
-V_new = np.copy(V_raw)
-V_new[mask] = b[mask]
+    # Loading the mask / potential we want
+    V = np.loadtxt("mask.txt", int, '#', ';')
+    mask = np.where(V == 1)
 
-np.savetxt("potential_raw.txt", V_raw, '%.18e', ';')
+    # Run the conjugate gradient solver
+    b = get_RHS(V, mask)
+    V_raw = conjugate_grad_solve(laplace, mask, b, 0*b, 1e-9, V.shape[0]*3)
 
-plt.imshow(V_new)
-plt.show()
+    # Calculate the charge in raw and corrected forms
+    V_new = np.copy(V_raw)
+    V_new[mask] = b[mask]
+    rho_raw = V_raw - sum_neighbors(V_raw)/4
+    rho_new = V_new - sum_neighbors(V_new)/4
+
+    # Save to text file for plotting (see plot.py)
+    np.savetxt("potential_raw.txt", V_raw, '%.18e', ';')
+    np.savetxt("potential_new.txt", V_new, '%.18e', ';')
+    np.savetxt("charge_raw.txt", rho_raw, '%.18e', ';')
+    np.savetxt("charge_new.txt", rho_new, '%.18e', ';')

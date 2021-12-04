@@ -8,7 +8,7 @@ def conjugate_grad_solve(fun, mask, b, x, tol=1e-9, niter=50):
     r = b - fun(x, mask)
 
     # Calculate the length squared of the residual
-    rsquared = r.T @ r
+    rsquared = np.sum(r * r)
 
     # Copy the residual into a new vector (representing the basis vector p_i)
     p = np.copy(r)
@@ -20,17 +20,20 @@ def conjugate_grad_solve(fun, mask, b, x, tol=1e-9, niter=50):
     for i in range(niter):
         # Calculate the coefficient alpha for the new solution
         Ap = fun(p, mask)
-        alpha = rsquared / (p.T @ Ap)
+        alpha = rsquared / np.sum(p * Ap)
 
         # Update the solution vector using alpha and p
         x_solve = x_solve + alpha * p
 
         # Calculate the new residuals and length squared
         r = r - alpha * Ap
-        rsquared_new = r.T @ r
+        rsquared_new = np.sum(r * r)
+        
+        # Print something to show iteration progress
+        print("residuals =", rsquared_new,"iteration", i+1, "out of", niter)
 
         # If the residual is smaller than the tolerance, break and return
-        if np.sqrt(r.T @ r) < tol:
+        if np.sqrt(rsquared_new) < tol:
             converged = True
             break
         

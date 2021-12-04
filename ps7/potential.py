@@ -1,12 +1,19 @@
 import numpy as np
+import os
 
 # This takes the sum of the neighbors of each point
-def sum_neighbors(mat):
-    tot=0
-    for i in range(len(mat.shape)):
-        tot=tot+np.roll(mat,1,axis=i)
-        tot=tot+np.roll(mat,-1,axis=i)
-    return tot
+def sum_neighbors(matrix):
+    # Initialize total to 0
+    total = 0
+
+    # Loop through all matrix dimensions
+    for i in range(len(matrix.shape)):
+        # Slide by +1 and -1 and sum
+        total = total + np.roll(matrix, 1, axis = i)
+        total = total + np.roll(matrix, -1, axis = i)
+
+    # Return the total
+    return total
 
 if __name__ == '__main__':
     # Set the size of the Green's function and calculate the origin
@@ -46,6 +53,10 @@ if __name__ == '__main__':
     print("V[1,0] =", V[origin+1,origin])                       # V[1,0] = -4.440892098500626e-16
     print("V[2,0] =", V[origin+2,origin])                       # V[2,0] = -0.45339362157990104
     print("V[5,0] =", V[origin+5,origin])                       # V[5,0] = -1.0508459260774505
+
+    # Set up relative path handling
+    path = os.path.realpath(os.path.dirname(__file__))
+    os.chdir(path)
 
     # Save the potential to a file so we can load it without having to calculate it each time
     # If you change niter or size you'll want to comment this out otherwise the rest will

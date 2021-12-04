@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     # Calculate the charge in raw and corrected forms
     V_new = np.copy(V_raw)
-    V_new[mask] = b[mask]
+    V_new[mask] = V[mask]
     rho_raw = V_raw - sum_neighbors(V_raw)/4
     rho_new = V_new - sum_neighbors(V_new)/4
 
